@@ -1,8 +1,7 @@
 const express = require("express");
 const router = express.Router();
-const busCtrl = require("../controllers/busCtrl");
+const busCtrl = require("../Controllers/busCtrl");
 
-// CRUD routes
 router.post("/", busCtrl.createBus);       // Create bus
 router.get("/", busCtrl.getAllBuses);      // Get all buses
 router.get("/:id", busCtrl.getBusById);    // Get single bus

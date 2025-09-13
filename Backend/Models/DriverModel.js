@@ -30,6 +30,12 @@ const driverSchema = new mongoose.Schema({
         type: String, 
         required: true 
     },
+
+    role: {
+        type: String,
+        default: "driver"  
+    },
+
     createdAt: {
         type: Date,
         default: Date.now 
@@ -38,4 +44,4 @@ const driverSchema = new mongoose.Schema({
 
 const Driver = mongoose.model("Driver", driverSchema);
 
-module.exports = Driver;   
+module.exports = Driver;
