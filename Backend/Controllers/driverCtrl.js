@@ -16,6 +16,7 @@ const createRefreshToken = (payload) => {
 const driverCtrl = {
     registerDriver: async (req, res) => {
         try {
+            console.log(req.body);
             const { name, email, busId, busNo, phoneNumber, password } = req.body;
 
             const existingDriver = await Driver.findOne({ email });

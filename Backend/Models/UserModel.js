@@ -16,7 +16,7 @@ const userSchema = new mongoose.Schema({
         required:true
     },
     enroll: {
-        type: String,
+        type: Number,
         required: true,
         unique: true,
         maxLength: 10,

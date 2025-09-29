@@ -17,44 +17,61 @@ const userCtrl={
     try {
         const user1 = await User.findById(req.user.id).select('-password');
         if (!user1) return res.status(404).json({ msg: "User not found" });
-
         return res.json(user1); 
     } catch (err) {
         return res.status(500).json({ msg: err.message });
     }
 },
 
-registerUser: async (req, res) => {
+registerUser: async (req, res) => { 
     try {
-        const { name, email, busId, enroll, pickupLocation, course, year, password } = req.body;
-  
+        let { name, email, busId, enroll, pickupLocation, course, year, password } = req.body;
+
+       
+        if (pickupLocation) {
+            pickupLocation = pickupLocation.toUpperCase();  
+        }
+
         const user = await User.findOne({ email });
         if (user) return res.status(400).json({ msg: "The email already exists." });
 
         const hashedPassword = await bcrypt.hash(password, 10);
 
         const newUser = new User({
-            name, email, busId, enroll, pickupLocation, course, year, password: hashedPassword
+            name,
+            email,
+            busId,
+            enroll,
+            pickupLocation, 
+            course,
+            year,
+            password: hashedPassword
         });
         await newUser.save();
 
         const accessToken = createAccessToken({ id: newUser._id });
         const refreshToken = createRefreshToken({ id: newUser._id });
 
-        res.cookie('refreshToken', refreshToken, {
-            httpOnly: true,
-            path: '/user/refresh_token',
-            maxAge: 7 * 24 * 60 * 60 * 1000 
-        });
-
+res.cookie("refreshToken", refreshToken, {
+  httpOnly: true,
+  path: "/user/refresh_token",
+  secure: false,       // true if HTTPS
+  sameSite: "lax",     // or "none" if you ever deploy frontend+backend on diff domains
+  maxAge: 7 * 24 * 60 * 60 * 1000,
+});
         const userResponse = newUser.toObject();
         delete userResponse.password;
 
-        return res.status(201).json({ msg: "User registered successfully", accessToken, user: userResponse });
-    } catch(err) {
-        return res.status(500).json({ msg: err.message });  
+        return res.status(201).json({
+            msg: "User registered successfully",
+            accessToken,
+            user: userResponse,
+        });
+    } catch (err) {
+        return res.status(500).json({ msg: err.message });
     }
 },
+
 refreshToken: async (req, res) => {
         try {
             const rf_token = req.cookies.refreshToken;
@@ -83,10 +100,13 @@ refreshToken: async (req, res) => {
             const accessToken = createAccessToken({ id: user._id });
             const refreshToken = createRefreshToken({ id: user._id });
 
-            res.cookie('refreshToken', refreshToken, {
-                httpOnly: true,
-                path: '/user/refresh_token',
-            });
+          res.cookie("refreshToken", refreshToken, {
+  httpOnly: true,
+  path: "/user/refresh_token",
+  secure: false,       // true if HTTPS
+  sameSite: "lax",     // or "none" if you ever deploy frontend+backend on diff domains
+  maxAge: 7 * 24 * 60 * 60 * 1000,
+});
 
             return res.json({ msg: 'Logged In successfully', accessToken, user });
         } catch (err) {
@@ -96,6 +116,7 @@ refreshToken: async (req, res) => {
 
     logout: async (req, res) => {
         try {
+          console.log("Logout endpoint hit");
             res.clearCookie('refreshToken', { path: '/user/refresh_token' });
             return res.json({ msg: "Logged Out" });
         } catch (err) {

@@ -1,60 +1,108 @@
 const express = require('express'); 
 const app = express();
 const mongoose = require('mongoose');
+const cookieParser = require('cookie-parser');
+const cors = require('cors');
+const http = require('http');
+const { Server } = require('socket.io');
+const axios = require('axios');
+require('dotenv').config(); // Make sure dotenv is configured
+
 const userRoutes = require('./Routes/userRoutes');
 const driverRoutes = require('./Routes/driverRoutes');
 const busRoutes = require('./Routes/busRoutes');
-require('dotenv').config();
-const PORT = process.env.PORT || 5000;
-const cookieParser = require('cookie-parser');
-const http = require('http');
-const { Server } = require('socket.io');
-const server = http.createServer(app);
-const cors = require('cors');
 
+const PORT = process.env.PORT || 5000;
+const server = http.createServer(app);
+
+// ... (Your existing Socket.IO and middleware setup) ...
+// SOCKET.IO with CORS
 const io = new Server(server, {
-  cors: {
-    origin: "http://localhost:3000", 
-    methods: ["GET", "POST"]
+  cors: { 
+    origin: "http://localhost:4000", 
+    methods: ["GET", "POST"],
+    credentials: true     
   }
 });
 
-//Middlewares 
-app.use(cookieParser());
+// Middlewares
 app.use(express.json());
-app.use(cors());
+app.use(cookieParser());
+app.use(cors({
+  origin: "http://localhost:4000",
+  methods: ["GET", "POST"],
+  credentials: true     
+}));
+
+
+// Routes
 app.use('/user', userRoutes);
 app.use('/driver', driverRoutes);
 app.use('/bus', busRoutes);
 
-// SOCKET.IO
+
+// ✅ NEW OPENROUTESERVICE PROXY ROUTE
+// -----------------------------------------------------------------
+app.post('/api/ors/route', async (req, res) => {
+  try {
+    const { coordinates } = req.body;
+
+    if (!coordinates || coordinates.length < 2) {
+      return res.status(400).json({ message: 'At least two coordinates are required.' });
+    }
+
+    const orsApiKey = process.env.ORS_API_KEY;
+    if (!orsApiKey) {
+      throw new Error("Openrouteservice API key is missing.");
+    }
+    
+    console.log("Proxying request to Openrouteservice...");
+    
+    // Make a POST request to the ORS API
+    const response = await axios.post(
+      'https://api.openrouteservice.org/v2/directions/driving-car/geojson',
+      { coordinates: coordinates }, // The request body
+      {
+        headers: {
+          'Authorization': orsApiKey, // Securely send the API key
+          'Content-Type': 'application/json'
+        }
+      }
+    );
+
+    res.json(response.data); // Send ORS's response back to the React app
+
+  } catch (error) {
+    console.error('Error in ORS proxy:', error.response ? error.response.data : error.message);
+    res.status(500).json({ message: 'Failed to fetch route from Openrouteservice' });
+  }
+});
+// -----------------------------------------------------------------
+
+
+// ... (Your existing Socket.IO handlers and server start logic) ...
+// SOCKET.IO handlers
 io.on('connection', (socket) => {
   console.log('connected', socket.id);
 
-  socket.on('join_room', (room) => {
-    socket.join(room);
-    console.log(`User ${socket.id} joined room ${room}`);
+  socket.on('join_room', (busId) => {
+    socket.join(busId);
+    console.log(`User ${socket.id} joined room ${busId}`);
   });
 
   socket.on('sendInfo', (information) => {
-     let { driverName, busId, lat, lng } = information;
+    let { name, busId, lat, lng } = information;
+    console.log("Received info:", information);
 
-  lat = Number(lat);
-  lng = Number(lng);
+    lat = Number(lat);
+    lng = Number(lng);
 
-  // Validate
-  if (
-    !busId || 
-    isNaN(lat) || 
-    isNaN(lng) || 
-    lat < -90 || lat > 90 || 
-    lng < -180 || lng > 180
-  ) {
-    console.log("Invalid payload received:", information);
-    return;
-  }
+    if (!busId || isNaN(lat) || isNaN(lng) || lat < -90 || lat > 90 || lng < -180 || lng > 180) {
+      console.log("Invalid payload received:", information);
+      return;
+    }
 
-    io.to(busId).emit('receiveInfo', { driverName, busId, lat, lng });
+    io.to(busId).emit('receiveInfo', { name, busId, lat, lng });
   });
 
   socket.on('disconnect', () => {
@@ -62,11 +110,12 @@ io.on('connection', (socket) => {
   });
 });
 
-
+// Start server
 server.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
 
+// Connect DB
 const URI = process.env.MONGODB_URI;
 mongoose.connect(URI)
   .then(() => console.log('connected'))

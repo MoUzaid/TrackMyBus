@@ -5,7 +5,7 @@ const authDriver = (req, res, next) => {
     const token = req.header("Authorization");
     if (!token) return res.status(401).json({ msg: "No token, access denied" });
 
-    jwt.verify(token, process.env.DRIVER_SECRET, (err, decoded) => {
+    jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
       if (err) return res.status(403).json({ msg: "Invalid token" });
 
       req.driver = { id: decoded.id }; // store driver ID in req
