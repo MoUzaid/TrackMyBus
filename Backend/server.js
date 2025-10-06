@@ -11,9 +11,16 @@ require('dotenv').config(); // Make sure dotenv is configured
 const userRoutes = require('./Routes/userRoutes');
 const driverRoutes = require('./Routes/driverRoutes');
 const busRoutes = require('./Routes/busRoutes');
-
+const admin = require('firebase-admin');
+const serviceAccount = require("./serviceAccountKey.json");
+const User = require('./Models/UserModel');
 const PORT = process.env.PORT || 5000;
 const server = http.createServer(app);
+
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount),
+});
+
 
 // ... (Your existing Socket.IO and middleware setup) ...
 // SOCKET.IO with CORS
@@ -30,7 +37,7 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(cors({
   origin: "http://localhost:4000",
-  methods: ["GET", "POST"],
+  methods: ["GET", "POST","PUT", "DELETE"],
   credentials: true     
 }));
 
@@ -39,6 +46,29 @@ app.use(cors({
 app.use('/user', userRoutes);
 app.use('/driver', driverRoutes);
 app.use('/bus', busRoutes);
+
+app.post("/send-multiple", async (req, res) => {
+  try {
+    const { userId, title, body } = req.body;
+    const user = await User.findById(userId);
+    const tokens = user.fcmTokens;
+    const message = {
+      notification: { title, body },
+      tokens, 
+    };
+  const response = await admin.messaging().sendEachForMulticast(message);
+  console.log("FCM response:", response);
+   response.responses.forEach((resp, idx) => {
+      if (!resp.success) {
+        user.fcmTokens.splice(idx, 1); 
+      }
+    });
+  res.json({ success: true, response });
+    res.json({ success: true, response });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
 
 
 // ✅ NEW OPENROUTESERVICE PROXY ROUTE
@@ -58,13 +88,12 @@ app.post('/api/ors/route', async (req, res) => {
     
     console.log("Proxying request to Openrouteservice...");
     
-    // Make a POST request to the ORS API
     const response = await axios.post(
       'https://api.openrouteservice.org/v2/directions/driving-car/geojson',
-      { coordinates: coordinates }, // The request body
+      { coordinates: coordinates }, 
       {
         headers: {
-          'Authorization': orsApiKey, // Securely send the API key
+          'Authorization': orsApiKey, 
           'Content-Type': 'application/json'
         }
       }
@@ -77,7 +106,7 @@ app.post('/api/ors/route', async (req, res) => {
     res.status(500).json({ message: 'Failed to fetch route from Openrouteservice' });
   }
 });
-// -----------------------------------------------------------------
+
 
 
 // ... (Your existing Socket.IO handlers and server start logic) ...

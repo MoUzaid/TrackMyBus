@@ -5,7 +5,6 @@ const busCtrl = {
   createBus: async (req, res) => {
     try {
       const { busId, busNo, capacity, startLocation, endLocation, pickupPoints } = req.body;
-
       // Check if bus already exists by busNo
       const existingBus = await Bus.findOne({ busNo });
       if (existingBus) {
@@ -61,7 +60,7 @@ const busCtrl = {
       const { busId, busNo, capacity, startLocation, endLocation, pickupPoints } = req.body;
 
       const bus = await Bus.findByIdAndUpdate(
-        req.params.id, // 🔹 Here, you are updating by MongoDB _id, not busId
+        req.params.id, 
         { busId, busNo, capacity, startLocation, endLocation, pickupPoints },
         { new: true }
       );
@@ -73,10 +72,10 @@ const busCtrl = {
     }
   },
 
-  // Delete bus
   deleteBus: async (req, res) => {
     try {
-      const bus = await Bus.findByIdAndDelete(req.params.id); // 🔹 Deleting by MongoDB _id
+      console.log("Delete Bus ID:", req.params.id); // Debug log
+      const bus = await Bus.findByIdAndDelete(req.params.id); 
       if (!bus) return res.status(404).json({ msg: "Bus not found" });
       return res.json({ msg: "Bus deleted successfully" });
     } catch (err) {

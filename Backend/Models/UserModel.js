@@ -37,7 +37,10 @@ const userSchema = new mongoose.Schema({
         type: String, 
         required: true 
     },
-
+    fcmTokens: {
+    type: [String], // array of strings
+    default: [],    // default empty array
+  },
     role: {
         type: Number,
         enum: [0, 1],   
@@ -50,6 +53,6 @@ const userSchema = new mongoose.Schema({
     }
 });
 
-const User = mongoose.model("User", userSchema);
+const User = mongoose.model("Student", userSchema);
 
 module.exports = User;

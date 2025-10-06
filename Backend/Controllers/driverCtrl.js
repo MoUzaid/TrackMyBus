@@ -14,6 +14,14 @@ const createRefreshToken = (payload) => {
 };
 
 const driverCtrl = {
+      getAllDriver: async (req, res) => {
+    try {
+        const drivers = await Driver.find().select('-password');
+        res.json(drivers);
+    } catch (err) {
+        return res.status(500).json({ msg: err.message });
+    }
+},
     registerDriver: async (req, res) => {
         try {
             console.log(req.body);
@@ -125,6 +133,7 @@ const driverCtrl = {
 forgotPassword: async (req, res) => {
   try {
     const { email } = req.body;
+    console.log(email);
     const driver = await Driver.findOne({ email });
     if (!driver) return res.status(404).json({ msg: "Driver not found" });
 
@@ -134,7 +143,7 @@ forgotPassword: async (req, res) => {
       { expiresIn: "15m" }
     );
 
-    const resetLink = `http://localhost:3000/reset-password/${resetToken}`; 
+    const resetLink = `http://localhost:4000/reset-password-driver/${resetToken}`; 
     // replace localhost:3000 with frontend URL
 
     // send email
@@ -156,7 +165,7 @@ forgotPassword: async (req, res) => {
     resetPassword:async (req, res) => {
         try{
     const { token, newPassword } = req.body;
-
+console.log(token,newPassword);
     if (!token) return res.status(400).json({ msg: "No token provided" });
     const decoded = jwt.verify(token, process.env.RESET_PASSWORD_SECRET);
         if (!decoded) return res.status(400).json({ msg: "Invalid or expired token" });

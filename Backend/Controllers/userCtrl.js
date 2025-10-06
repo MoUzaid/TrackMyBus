@@ -13,6 +13,14 @@ const createRefreshToken = (payload) => {
 };
 
 const userCtrl={
+  getAllUser: async (req, res) => {
+    try {
+        const users = await User.find().select('-password');
+        res.json(users);
+    } catch (err) {
+        return res.status(500).json({ msg: err.message });
+    }
+},
     getUser: async (req, res) => {
     try {
         const user1 = await User.findById(req.user.id).select('-password');
@@ -135,7 +143,7 @@ forgotPassword: async (req, res) => {
       { expiresIn: "15m" }
     );
 
-    const resetLink = `http://localhost:3000/reset-password/${resetToken}`;
+    const resetLink = `http://localhost:4000/reset-password/${resetToken}`;
 
     await sendEmail(
       email,
@@ -166,7 +174,24 @@ forgotPassword: async (req, res) => {
     } catch (err) {
       return res.status(400).json({ msg: "Invalid or expired token" });
     }
+  },
+  fcmToken: async (req, res) => {
+    const { userId, token } = req.body;
+    try{
+      if (!userId || !token) {
+        return res.status(400).json({ msg: "User ID and token are required" });
+      }
+      const user = await User.findById(userId);
+      if (!user.fcmTokens.includes(token)) {
+      user.fcmTokens.push(token);
+      await user.save();
+    }
+    res.json({ success: true });
+  } 
+  catch (err) {
+    return res.status(500).json({ msg: err.message });
   }
+}
 }
 
 
