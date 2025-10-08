@@ -3,5 +3,10 @@
     "firebase": "^12.3.0",
     "leaflet": "^1.9.4",
     "react-leaflet": "^4.2.1"
+  },
+  {
+  "scripts": {
+    "start": "cd Backend && node server.js"
   }
+}
 }
