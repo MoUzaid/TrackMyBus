@@ -5,6 +5,6 @@
     "react-leaflet": "^4.2.1"
   },
   "scripts": {
-    "start": "cd Backend && node server.js"
+    "start": "cd Backend && npm install && node server.js"
   }
 }
