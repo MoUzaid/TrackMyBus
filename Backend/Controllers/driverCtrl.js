@@ -143,7 +143,7 @@ forgotPassword: async (req, res) => {
       { expiresIn: "15m" }
     );
 
-    const resetLink = `http://localhost:4000/reset-password-driver/${resetToken}`; 
+    const resetLink = `https://track-my-bus-v2.vercel.app/reset-password-driver/${resetToken}`; 
     // replace localhost:3000 with frontend URL
 
     // send email
