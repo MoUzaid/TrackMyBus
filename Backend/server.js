@@ -26,7 +26,7 @@ admin.initializeApp({
 // SOCKET.IO with CORS
 const io = new Server(server, {
   cors: { 
-    origin: "http://localhost:4000", 
+    origin: ["http://localhost:4000", "https://track-my-bus-v2-bgfk.vercel.app/"], 
     methods: ["GET", "POST"],
     credentials: true     
   }
@@ -36,7 +36,7 @@ const io = new Server(server, {
 app.use(express.json());
 app.use(cookieParser());
 app.use(cors({
-  origin: "http://localhost:4000",
+  origin: ["http://localhost:4000", "https://track-my-bus-v2-bgfk.vercel.app/"],
   methods: ["GET", "POST","PUT", "DELETE"],
   credentials: true     
 }));
