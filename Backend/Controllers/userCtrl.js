@@ -62,11 +62,12 @@ registerUser: async (req, res) => {
 
 res.cookie("refreshToken", refreshToken, {
   httpOnly: true,
+  secure: true,         
+  sameSite: "None",      
   path: "/user/refresh_token",
-  secure: false,       // true if HTTPS
-  sameSite: "lax",     // or "none" if you ever deploy frontend+backend on diff domains
-  maxAge: 7 * 24 * 60 * 60 * 1000,
+  maxAge: 7 * 24 * 60 * 60 * 1000, 
 });
+
         const userResponse = newUser.toObject();
         delete userResponse.password;
 
