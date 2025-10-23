@@ -26,7 +26,7 @@ admin.initializeApp({
 // SOCKET.IO with CORS
 const io = new Server(server, {
   cors: { 
-    origin: ["http://localhost:4000", "https://track-my-bus-v2-f60ek58zm-mouzaids-projects.vercel.app","https://track-my-bus-v2-lyxkg9juz-mouzaids-projects.vercel.app"], 
+    origin: ["http://localhost:4000", "https://track-my-bus-v2-f60ek58zm-mouzaids-projects.vercel.app","https://track-my-bus-v2.vercel.app"], 
     methods: ["GET", "POST"],
     credentials: true     
   }
@@ -36,7 +36,7 @@ const io = new Server(server, {
 app.use(express.json());
 app.use(cookieParser());
 app.use(cors({
-  origin: ["http://localhost:4000",  "https://track-my-bus-v2-f60ek58zm-mouzaids-projects.vercel.app","https://track-my-bus-v2-lyxkg9juz-mouzaids-projects.vercel.app"],
+  origin: ["http://localhost:4000",  "https://track-my-bus-v2-f60ek58zm-mouzaids-projects.vercel.app","https://track-my-bus-v2.vercel.app"],
   methods: ["GET", "POST","PUT", "DELETE"],
   credentials: true     
 }));
